@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotto Generator</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="lotto.html" class="active">Lotto Generator</a></li>
+            <li><a href="password.html">Password Generator</a></li>
+            <li><a href="calculator.html">Calculator</a></li>
+            <li><a href="cell-validator.html">Cell # Validator</a></li>
+            <li><a href="email-validator.html">Email Validator</a></li>
+        </ul>
+    </nav>
+
+    <button class="theme-toggle" aria-label="Toggle theme">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.65.23-1.34.36-2.05.36-3.31 0-6-2.69-6-6 0-1.26.38-2.43 1.05-3.4-.72-.13-1.48-.2-2.25-.2z"/>
+        </svg>
+    </button>
+
+    <div class="container">
+        <div class="tool-section">
+            <h2>SA Lotto Generator</h2>
+            
+            <div class="input-group">
+                <label class="label" for="lottoType">Select Lotto Type:</label>
+                <select class="input select" id="lottoType">
+                    <option value="lotto">SA Lotto (6/52)</option>
+                    <option value="powerball">PowerBall (5/50 + 1/20)</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button class="button" onclick="generateLotto()" id="generateBtn">
+                    Generate Numbers
+                </button>
+                <button class="button hidden" onclick="copyNumbers()" id="copyBtn">
+                    Copy Numbers
+                </button>
+            </div>
+
+            <div class="notification hidden" id="notification"></div>
+            <div class="numbers-container" id="numbersContainer"></div>
+            <div class="loader hidden" id="loader"></div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.querySelector('.theme-toggle');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        // Initialize theme
+        const storedTheme = localStorage.getItem('theme');
+        setTheme(storedTheme || (prefersDark.matches ? 'dark' : 'light'));
+
+        // Lotto Generator
+        const loader = document.getElementById('loader');
+        const copyBtn = document.getElementById('copyBtn');
+        const notification = document.getElementById('notification');
+
+        async function generateLotto() {
+            try {
+                loader.classList.remove('hidden');
+                copyBtn.classList.add('hidden');
+                notification.classList.add('hidden');
+                const container = document.getElementById('numbersContainer');
+                container.innerHTML = '';
+
+                // Simulate async operation
+                const type = document.getElementById('lottoType').value;
+                const numbers = await new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve(generateNumbers(type));
+                    }, 300);
+                });
+
+                numbers.forEach(num => {
+                    const block = document.createElement('div');
+                    block.className = `number-block${num.isPowerball ? ' number-block--powerball' : ''}`;
+                    block.textContent = num.value.toString().padStart(2, '0');
+                    container.appendChild(block);
+                });
+
+                copyBtn.classList.remove('hidden');
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        function generateNumbers(type) {
+            const numbers = [];
+            const mainSet = new Set();
+            const maxMain = type === 'lotto' ? 52 : 50;
+            const countMain = type === 'lotto' ? 6 : 5;
+
+            while (mainSet.size < countMain) {
+                mainSet.add(Math.floor(Math.random() * maxMain) + 1);
+            }
+
+            const sortedMain = [...mainSet].sort((a, b) => a - b);
+            numbers.push(...sortedMain.map(num => ({ value: num })));
+
+            if (type === 'powerball') {
+                const powerball = Math.floor(Math.random() * 20) + 1;
+                numbers.push({ value: powerball, isPowerball: true });
+            }
+
+            return numbers;
+        }
+
+        async function copyNumbers() {
+            try {
+                const numbers = [...document.querySelectorAll('.number-block')]
+                    .map(block => block.textContent);
+                
+                await navigator.clipboard.writeText(numbers.join(' '));
+                showNotification('✓ Numbers copied to clipboard!', 'success');
+            } catch (err) {
+                console.error('Copy failed:', err);
+                showNotification('⚠️ Failed to copy numbers!', 'error');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            notification.textContent = message;
+            notification.className = `notification notification--${type}`;
+            notification.classList.remove('hidden');
+            
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
