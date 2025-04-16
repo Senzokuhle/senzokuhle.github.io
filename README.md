@@ -53,4 +53,4 @@ A collection of essential web-based utilities featuring password generation, mat
 ### Installation
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/The-Swiss-Army-Knife.git
+git clone https://github.com/Senzokuhle/The-Swiss-Army-Knife.git
